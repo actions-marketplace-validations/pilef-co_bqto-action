@@ -1,0 +1,4 @@
+e10f00c67fca096688ea5a32acf73473734d8cbf81fb9ced5fe2699433ae6d21  bqto_0.16.0_darwin_amd64.tar.gz
+d3ca5e0322902cc4e907f1c0414ab00dff95bf6e21c52cdedf95ffddd9542b16  bqto_0.16.0_darwin_arm64.tar.gz
+9d31df9e51d9411073ab62c0688fcb3d300a6adc55c1bfd2120ff7b079d70cc6  bqto_0.16.0_linux_amd64.tar.gz
+24695b8babc1fd30cec30e49447b94211201c59f959b8f51d2adf822356be861  bqto_0.16.0_linux_arm64.tar.gz

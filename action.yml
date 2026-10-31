@@ -1,0 +1,86 @@
+name: bqto
+description: Reach a private Cloud SQL, AlloyDB or Memorystore instance through bqto, and with bqto Pro, Cloud Run or Managed Kafka.
+author: Pilef
+branding:
+  icon: database
+  color: blue
+
+inputs:
+  instance:
+    description: "Instance to reach, in the form that bqto connect --instance takes. Required unless profile or stack is set."
+    required: false
+  service:
+    description: "Service type: cloudsql, alloydb, redis or valkey. With edition pro, also cloudrun or kafka. bqto's default is cloudsql."
+    required: false
+  project:
+    description: "Google Cloud project ID. bqto's default is gcloud's project."
+    required: false
+  run:
+    description: "Command to run through the session, with bash. Without run, the session stays open for later steps of the job."
+    required: false
+  duration:
+    description: "Maximum lifetime of the bastion VM. Compute Engine deletes the VM after this time, even if the job dies."
+    required: false
+    default: 15m
+  network:
+    description: "VPC network name, or projects/P/global/networks/N. bqto's default is the instance's network."
+    required: false
+  region:
+    description: "Region. bqto's default is the instance's region."
+    required: false
+  zone:
+    description: "Zone of the bastion VM. bqto's default is the first zone in the region with capacity."
+    required: false
+  port:
+    description: "Local port. bqto's default is the service's port + 10000."
+    required: false
+  args:
+    description: "Extra bqto connect flags, such as --debug. The action splits them into words as a shell does, with quotes and backslashes, but expands nothing. The action refuses --."
+    required: false
+  edition:
+    description: "Which bqto runs: free runs the bqto binary that this action ships, pro downloads the newest bqto Pro beta build from Artifact Registry with the job's gcloud account."
+    required: false
+    default: free
+  profile:
+    description: "bqto Pro: one or more saved profiles, separated by commas, in one session."
+    required: false
+  stack:
+    description: "bqto Pro: a saved stack of profiles, in one session."
+    required: false
+  config:
+    description: "bqto Pro: path to a bqto config.toml that holds the profiles and stacks, such as .github/bqto.toml."
+    required: false
+  pro-project:
+    description: "bqto Pro: project of the Artifact Registry repository that holds the beta builds."
+    required: false
+    default: prj-bqto-beta
+  pro-location:
+    description: "bqto Pro: location of the Artifact Registry repository."
+    required: false
+    default: europe-west1
+  pro-repository:
+    description: "bqto Pro: name of the Artifact Registry repository."
+    required: false
+    default: bqto-pro
+
+outputs:
+  host:
+    description: "Local host of the session. Set only without run."
+  port:
+    description: "Local port of the session. Set only without run."
+  remote:
+    description: "Address of the instance that the session reaches. Set only without run."
+  bastion:
+    description: "Name of the bastion VM. Set only without run."
+  expires:
+    description: "Time when Compute Engine deletes the bastion VM, in RFC 3339. Set only without run."
+  proxy:
+    description: "socks5 when the session is a SOCKS5 proxy (Cloud Run, Managed Kafka, clustered Redis or Valkey), else empty. Set only without run."
+  sessions:
+    description: "JSON array of bqto's ready events, one per service, with every field that bqto prints, such as tls and auth. Set only without run."
+
+runs:
+  using: node24
+  main: main.mjs
+  post: post.mjs
+  post-if: always()

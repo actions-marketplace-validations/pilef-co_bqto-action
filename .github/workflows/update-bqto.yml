@@ -1,0 +1,73 @@
+name: update-bqto
+run-name: update bqto to ${{ inputs.tag || github.event.client_payload.tag || 'the latest release' }}
+
+# Run it by hand after a bqto release. A repository_dispatch of type bqto-release
+# with client_payload.tag also starts it, so bqto's release can trigger it later.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: bqto release tag, such as v0.11.0. Empty means the latest release.
+        required: false
+  repository_dispatch:
+    types: [bqto-release]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: update-bqto
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: vendor the release
+        id: vendor
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.event.client_payload.tag }}
+        run: |
+          if [ -z "$TAG" ]; then
+            TAG=$(gh release view -R pilef-co/bqto --json tagName --jq .tagName)
+          fi
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::the tag is not a release tag such as v0.11.0"
+            exit 1
+          fi
+          bin/update.sh "$TAG"
+          echo "tag=$TAG" >>"$GITHUB_OUTPUT"
+      - name: the new amd64 binary runs
+        run: bin/bqto_linux_amd64 version
+      - name: open a pull request
+        env:
+          GH_TOKEN: ${{ secrets.BQTO_ACTION_PR_TOKEN || github.token }}
+          TAG: ${{ steps.vendor.outputs.tag }}
+        run: |
+          if git diff --quiet -- bin/; then
+            echo "bin/ already holds bqto $TAG"
+            exit 0
+          fi
+          branch="update-bqto-$TAG"
+          if [ -n "$(gh pr list --head "$branch" --state open --json number --jq '.[].number')" ]; then
+            echo "a pull request for bqto $TAG is already open"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$branch"
+          git commit -qm "chore: vendor bqto $TAG" -- bin/
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          echo "::add-mask::$auth"
+          git -c http.extraheader="AUTHORIZATION: basic $auth" push --force origin "$branch"
+          gh pr create --head "$branch" --title "chore: vendor bqto $TAG" \
+            --body "Vendors the Linux binaries of bqto $TAG, checked against the release's checksums.txt by bin/update.sh."
