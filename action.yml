@@ -1,9 +1,9 @@
 name: bqto GCP IAP tunnel
-description: Reach a private Cloud SQL, AlloyDB or Memorystore instance through bqto, and with bqto Pro, Cloud Run or Managed Kafka.
+description: Reach private Google Cloud services (Cloud SQL, AlloyDB, Memorystore) through a short-lived bastion and IAP. Cloud Run and Managed Kafka with bqto Pro.
 author: Pilef
 branding:
   icon: database
-  color: blue
+  color: orange
 
 inputs:
   instance:
