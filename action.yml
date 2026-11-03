@@ -1,4 +1,4 @@
-name: bqto
+name: bqto GCP IAP tunnel
 description: Reach a private Cloud SQL, AlloyDB or Memorystore instance through bqto, and with bqto Pro, Cloud Run or Managed Kafka.
 author: Pilef
 branding:
